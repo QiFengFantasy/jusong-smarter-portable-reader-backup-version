@@ -1,0 +1,82 @@
+/*
+ * 阅读器面板内部样式（标签栏横滑、窄屏抽屉、窄屏内联）。
+ *
+ * 只作用于阅读器组件，不写进全局 src/styles/index.css（该文件由主题 agent 维护）。
+ * 引用处：ReaderTabBar.tsx / PanelDrawer.tsx（Vite 会对同一份 CSS 去重）。
+ */
+
+/* 面板顶部标签栏：内容溢出时横向滑动，滚动条隐藏（溢出提示用 ‹ / › 按钮）。 */
+.reader-tab-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reader-tab-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* 窄屏覆盖式抽屉：从侧边滑出 + 遮罩淡入。 */
+.reader-drawer-mask {
+  animation: reader-drawer-mask-in 160ms ease-out;
+}
+
+.reader-drawer-panel {
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+.reader-drawer-panel[data-side="left"] {
+  animation-name: reader-drawer-in-left;
+}
+
+.reader-drawer-panel[data-side="right"] {
+  animation-name: reader-drawer-in-right;
+}
+
+@keyframes reader-drawer-mask-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes reader-drawer-in-left {
+  from {
+    opacity: 0.6;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes reader-drawer-in-right {
+  from {
+    opacity: 0.6;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reader-tab-scroll {
+    scroll-behavior: auto;
+  }
+
+  .reader-drawer-mask,
+  .reader-drawer-panel {
+    animation: none;
+  }
+}

@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: 40 40% 95%;
+  --paper-soft: 42 45% 97%;
+  --ink: 28 24% 14%;
+  --ink-soft: 30 15% 38%;
+  --cinnabar: 6 70% 37%;
+  /* 封面占位渐变默认色（朱红）；由设置-外观的「封面占位色」覆盖（见 lib/theme.ts）。 */
+  --cover-from: 6 62% 34%;
+  --cover-via: 5 69% 30%;
+  --cover-to: 6 64% 16%;
+  --border: 32 20% 82%;
+  --muted: 38 20% 90%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    background-image:
+      radial-gradient(circle at 18% 8%, hsl(var(--cinnabar) / 0.045), transparent 42%),
+      radial-gradient(circle at 88% 92%, hsl(38 40% 80% / 0.25), transparent 50%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif;
+  }
+
+  ::selection {
+    background: hsl(var(--cinnabar) / 0.18);
+    color: hsl(var(--ink));
+  }
+
+  /* 拖拽侧栏宽度期间：统一光标、禁止选中文字，避免拖到正文时出现蓝色选区。 */
+  body.pane-resizing {
+    cursor: col-resize;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  body.pane-resizing * {
+    cursor: col-resize !important;
+  }
+
+  /* 品牌抽象图形：用 alpha mask 让元素按 currentColor 上色（Hero 水印/印章复用）。 */
+  .brand-glyph {
+    -webkit-mask-image: url("/brand/glyph-mask.png");
+    mask-image: url("/brand/glyph-mask.png");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-position: center;
+    mask-position: center;
+  }
+
+  /* 跳转命中段落/注释时的一次性高亮。 */
+  .jump-target-flash {
+    animation: jump-target-flash 1.8s ease-out;
+    border-radius: 4px;
+  }
+}
+
+@keyframes jump-target-flash {
+  0% {
+    background-color: hsl(var(--cinnabar) / 0.16);
+    box-shadow: 0 0 0 6px hsl(var(--cinnabar) / 0.06);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+@layer components {
+  .paper-panel {
+    @apply border border-border bg-paper-soft/90 shadow-paper;
+  }
+
+  .prose-reading p {
+    @apply mb-5 font-serif text-ink;
+    font-size: 1.06rem;
+    line-height: 2.05;
+    text-align: justify;
+  }
+
+  .prose-reading h2 {
+    @apply mt-10 mb-4 text-2xl font-semibold tracking-wide;
+  }
+
+  /* 书脊标题：中文竖排，过长时裁切（完整标题在卡片信息里）。 */
+  .book-cover-title {
+    writing-mode: vertical-rl;
+    letter-spacing: 0.14em;
+    line-height: 1.5;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  /*
+   * 封面占位渐变（无真实封面 / 封面加载中 / 读取失败时显示）。
+   * 颜色由设置-外观的「封面占位色」写入 --cover-from/via/to（默认朱红），
+   * 与 UI 强调色 --cinnabar 相互独立；真实封面以 <img> 覆盖其上。
+   */
+  .cover-placeholder-gradient {
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--cover-from)),
+      hsl(var(--cover-via)),
+      hsl(var(--cover-to))
+    );
+  }
+
+  /*
+   * Radix ScrollArea 会给「内容层」元素塞内联样式 `display: table; min-width: 100%`，
+   * 表布局的宽度取 max(可用宽度, 内容 min-content)。只要内容里存在不可断行/定宽的
+   * 元素（如文末「上一章/下一章」按钮里 nowrap 的章节名、知识库卡片的元信息行），
+   * 内层就会比滚动区更宽，而 viewport 是 overflow-x: hidden —— 于是右侧被裁掉且
+   * 无法横向滚动（左栏知识库卡片右侧文字截断、移动端阅读器正文右半部分出屏、
+   * 换章时有时正常有时异常，都是这一条根因）。
+   *
+   * 改成块级 + 可收缩：内容宽度跟随滚动区，内部按自身最大/百分比宽度换行。
+   * `!important` 用于覆盖 Radix 的内联样式；不影响滚动高度测量。
+   */
+  [data-radix-scroll-area-viewport] > * {
+    display: block !important;
+    min-width: 0 !important;
+  }
+
+  /* 正文长不可断词（URL、英文长词、长数字）防御：实在放不下时允许任意断行，
+     配合上面的 ScrollArea 修复，保证任何章节都不会把正文撑出屏幕。 */
+  .prose-reading {
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .dialog-overlay[data-state="open"] {
+    animation: dialog-overlay-in 160ms ease-out;
+  }
+
+  .dialog-content[data-state="open"] {
+    animation: dialog-content-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@keyframes dialog-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-content-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-overlay[data-state="open"],
+  .dialog-content[data-state="open"] {
+    animation: none;
+  }
+}

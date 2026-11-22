@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.local
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/resources/seed/
+
+# 发布产物（本机生成，不入库）
+release/
+
+# 临时目录
+_scratch/
+_scratch*/
+
+# 开发态用户库（本机生成，不入库）
+data/library/
+
+# 旧 Web 工程存档（仅本机保留）
+history/
+
+__pycache__/
+*.pyc
